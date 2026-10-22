@@ -5,19 +5,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>Zen Clock</title>
+  <title>O-P Labs | Zen Protocol Clock</title>
   <style>
-    * { 
-      margin: 0; 
-      padding: 0; 
-      box-sizing: border-box; 
-      -webkit-tap-highlight-color: transparent;
+    :root {
+      --bg: #030406;
+      --text: #ffffff;
+      --emerald: #10b981;
+      --emerald-glow: rgba(16, 185, 129, 0.4);
+      --panel-bg: rgba(15, 20, 28, 0.75);
+      --panel-border: rgba(255, 255, 255, 0.1);
+      --muted: #8b949e;
     }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     
     body {
-      background-color: #000000; /* 極致純黑 */
-      color: #ffffff; /* 純白字體 */
-      font-family: "SF Pro Display", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", sans-serif;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -25,30 +30,360 @@
       width: 100vw;
       overflow: hidden;
       user-select: none;
-      cursor: default;
+      transition: background-color 0.8s ease;
+    }
+
+    /* Main Clock Display */
+    .clock-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      z-index: 10;
+    }
+
+    /* Status Badge (Focus / Rest) */
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      opacity: 0.7;
+      transition: color 0.5s ease, opacity 0.5s ease;
+    }
+    .pulse-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--text);
+      box-shadow: 0 0 8px var(--text);
+      transition: background 0.5s ease, box-shadow 0.5s ease;
+    }
+    .status-badge.resting { color: var(--emerald); opacity: 1; }
+    .status-badge.resting .pulse-dot {
+      background: var(--emerald);
+      box-shadow: 0 0 12px var(--emerald);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(0.9); opacity: 0.8; }
+      50% { transform: scale(1.4); opacity: 0.4; }
     }
 
     #clock {
-      font-size: 18vw; /* 根據螢幕寬度自動縮放 */
+      font-size: 16vw;
       font-weight: 800;
-      letter-spacing: -2px;
-      font-variant-numeric: tabular-nums; /* 確保數字切換時不會左右抖動 */
+      letter-spacing: -3px;
+      font-variant-numeric: tabular-nums;
+      transition: color 0.8s ease, text-shadow 0.8s ease, transform 0.3s ease;
     }
 
-    /* 手機直式螢幕時字體再放大一點 */
+    /* Green Rest State */
+    .is-resting #clock {
+      color: var(--emerald);
+      text-shadow: 0 0 40px var(--emerald-glow);
+    }
+
+    /* Settings Button (Hidden until hovered) */
+    .settings-trigger {
+      position: absolute;
+      top: 24px;
+      left: 24px;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      opacity: 0;
+      cursor: pointer;
+      z-index: 50;
+      transition: opacity 0.3s ease;
+      color: var(--muted);
+    }
+    body:hover .settings-trigger, .settings-trigger:active {
+      opacity: 0.6;
+    }
+    .settings-trigger:hover { opacity: 1; }
+
+    /* Settings Panel */
+    .settings-overlay {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    .settings-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .settings-panel {
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      padding: 28px;
+      border-radius: 20px;
+      width: 90%;
+      max-width: 380px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+      transform: translateY(20px);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .settings-overlay.active .settings-panel {
+      transform: translateY(0);
+    }
+    .panel-header {
+      font-size: 16px;
+      font-weight: 800;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .close-btn { font-size: 20px; cursor: pointer; color: var(--muted); }
+    
+    /* Tabs */
+    .tabs {
+      display: flex;
+      background: rgba(0,0,0,0.5);
+      border-radius: 10px;
+      padding: 4px;
+      margin-bottom: 20px;
+    }
+    .tab {
+      flex: 1;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 8px 0;
+      cursor: pointer;
+      border-radius: 7px;
+      color: var(--muted);
+      transition: 0.2s;
+    }
+    .tab.active { background: #232a38; color: var(--text); }
+
+    /* Forms */
+    .form-group { display: none; flex-direction: column; gap: 14px; }
+    .form-group.active { display: flex; }
+    
+    .input-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    input[type="number"], input[type="time"] {
+      background: #11151c;
+      border: 1px solid var(--panel-border);
+      color: var(--text);
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 14px;
+      width: 100px;
+      outline: none;
+      font-family: inherit;
+    }
+    input[type="number"]:focus, input[type="time"]:focus { border-color: var(--emerald); }
+
+    .action-btn {
+      margin-top: 20px;
+      width: 100%;
+      background: var(--text);
+      color: var(--bg);
+      border: none;
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .action-btn:hover { background: #e5e7eb; }
+    .action-btn.emerald { background: var(--emerald); color: #000; }
+    .action-btn.emerald:hover { background: #34d399; }
+
     @media (max-width: 600px) {
-      #clock {
-        font-size: 24vw;
-      }
+      #clock { font-size: 22vw; }
+      .settings-trigger { opacity: 0.3; } /* 手機版預設微微顯示，避免找不到 */
     }
   </style>
 </head>
 <body>
 
-  <div id="clock">00:00:00</div>
+  <!-- Hidden Settings Trigger -->
+  <div class="settings-trigger" id="btnOpenSettings">⚙️</div>
+
+  <!-- Main Display -->
+  <div class="clock-container" id="mainContainer">
+    <div class="status-badge" id="statusBadge">
+      <span class="pulse-dot"></span>
+      <span id="statusText">FOCUS PROTOCOL</span>
+    </div>
+    <div id="clock">00:00:00</div>
+  </div>
+
+  <!-- Settings Panel Overlay -->
+  <div class="settings-overlay" id="settingsOverlay">
+    <div class="settings-panel">
+      <div class="panel-header">
+        <span>Rest Protocol Settings</span>
+        <span class="close-btn" id="btnCloseSettings">&times;</span>
+      </div>
+      
+      <div class="tabs">
+        <div class="tab active" id="tabInterval" onclick="switchTab('interval')">Interval (多久一次)</div>
+        <div class="tab" id="tabSchedule" onclick="switchTab('schedule')">Schedule (幾點到幾點)</div>
+      </div>
+
+      <!-- Interval Mode Form -->
+      <div class="form-group active" id="formInterval">
+        <div class="input-row">
+          <span>Focus Time (mins)</span>
+          <input type="number" id="inpFocus" value="50" min="1">
+        </div>
+        <div class="input-row">
+          <span>Rest Time (mins)</span>
+          <input type="number" id="inpRest" value="10" min="1">
+        </div>
+        <button class="action-btn emerald" onclick="startInterval()">Start New Cycle Now</button>
+      </div>
+
+      <!-- Schedule Mode Form -->
+      <div class="form-group" id="formSchedule">
+        <div class="input-row">
+          <span>Rest Start Time</span>
+          <input type="time" id="inpStart" value="12:00">
+        </div>
+        <div class="input-row">
+          <span>Rest End Time</span>
+          <input type="time" id="inpEnd" value="13:00">
+        </div>
+        <button class="action-btn" onclick="saveSchedule()">Save Schedule</button>
+      </div>
+    </div>
+  </div>
 
   <script>
+    // Elements
     const clockEl = document.getElementById('clock');
+    const mainContainer = document.getElementById('mainContainer');
+    const statusBadge = document.getElementById('statusBadge');
+    const statusText = document.getElementById('statusText');
+    const overlay = document.getElementById('settingsOverlay');
+    
+    // State
+    let config = {
+      mode: 'interval', // 'interval' or 'schedule'
+      focusMins: 50,
+      restMins: 10,
+      cycleStartTime: null, // Timestamp when interval started
+      scheduleStart: '12:00',
+      scheduleEnd: '13:00'
+    };
+
+    // Load from LocalStorage
+    try {
+      const saved = localStorage.getItem('zen_clock_config');
+      if (saved) config = { ...config, ...JSON.parse(saved) };
+    } catch (e) {}
+
+    // Init UI inputs
+    document.getElementById('inpFocus').value = config.focusMins;
+    document.getElementById('inpRest').value = config.restMins;
+    document.getElementById('inpStart').value = config.scheduleStart;
+    document.getElementById('inpEnd').value = config.scheduleEnd;
+    switchTab(config.mode);
+
+    function persistConfig() {
+      localStorage.setItem('zen_clock_config', JSON.stringify(config));
+    }
+
+    // UI Logic
+    document.getElementById('btnOpenSettings').onclick = () => overlay.classList.add('active');
+    document.getElementById('btnCloseSettings').onclick = () => overlay.classList.remove('active');
+    overlay.onclick = (e) => { if(e.target === overlay) overlay.classList.remove('active'); };
+
+    function switchTab(mode) {
+      config.mode = mode;
+      document.getElementById('tabInterval').classList.toggle('active', mode === 'interval');
+      document.getElementById('tabSchedule').classList.toggle('active', mode === 'schedule');
+      document.getElementById('formInterval').classList.toggle('active', mode === 'interval');
+      document.getElementById('formSchedule').classList.toggle('active', mode === 'schedule');
+      persistConfig();
+      checkRestStatus();
+    }
+
+    function startInterval() {
+      config.focusMins = parseInt(document.getElementById('inpFocus').value) || 50;
+      config.restMins = parseInt(document.getElementById('inpRest').value) || 10;
+      config.cycleStartTime = Date.now();
+      persistConfig();
+      overlay.classList.remove('active');
+      checkRestStatus();
+    }
+
+    function saveSchedule() {
+      config.scheduleStart = document.getElementById('inpStart').value;
+      config.scheduleEnd = document.getElementById('inpEnd').value;
+      persistConfig();
+      overlay.classList.remove('active');
+      checkRestStatus();
+    }
+
+    // Clock & Status Logic
+    function checkRestStatus() {
+      const now = new Date();
+      let isResting = false;
+
+      if (config.mode === 'interval') {
+        if (!config.cycleStartTime) {
+          isResting = false;
+        } else {
+          const elapsedMs = now.getTime() - config.cycleStartTime;
+          const focusMs = config.focusMins * 60000;
+          const totalCycleMs = (config.focusMins + config.restMins) * 60000;
+          const currentCycleTime = elapsedMs % totalCycleMs;
+          isResting = currentCycleTime >= focusMs;
+        }
+      } else if (config.mode === 'schedule') {
+        const currentMins = now.getHours() * 60 + now.getMinutes();
+        const [sh, sm] = config.scheduleStart.split(':').map(Number);
+        const [eh, em] = config.scheduleEnd.split(':').map(Number);
+        const startMins = sh * 60 + sm;
+        const endMins = eh * 60 + em;
+
+        if (startMins < endMins) {
+          isResting = currentMins >= startMins && currentMins < endMins;
+        } else {
+          // Crosses midnight (e.g., 23:00 to 06:00)
+          isResting = currentMins >= startMins || currentMins < endMins;
+        }
+      }
+
+      // Apply Visual State
+      if (isResting) {
+        mainContainer.classList.add('is-resting');
+        statusBadge.classList.add('resting');
+        statusText.textContent = "REST PROTOCOL";
+      } else {
+        mainContainer.classList.remove('is-resting');
+        statusBadge.classList.remove('resting');
+        statusText.textContent = "FOCUS PROTOCOL";
+      }
+    }
 
     function updateTime() {
       const now = new Date();
@@ -56,22 +391,21 @@
       const m = String(now.getMinutes()).padStart(2, '0');
       const s = String(now.getSeconds()).padStart(2, '0');
       clockEl.textContent = `${h}:${m}:${s}`;
+      checkRestStatus();
     }
 
-    // 每秒更新一次時間
     setInterval(updateTime, 1000);
-    updateTime(); // 網頁載入時立刻執行一次，避免出現 00:00:00 的閃爍
+    updateTime();
 
-    // 雙擊進入或退出全螢幕 (適合拿舊平板或手機當時鐘)
-    document.body.addEventListener('dblclick', () => {
+    // Double-click to Fullscreen
+    document.body.addEventListener('dblclick', (e) => {
+      // Prevent fullscreen if clicking on settings panel
+      if(e.target.closest('.settings-overlay') || e.target.closest('.settings-trigger')) return;
+      
       if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen().catch(err => {
-          console.log(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
-        });
+        document.documentElement.requestFullscreen().catch(err => {});
       } else {
-        if (document.exitFullscreen) {
-          document.exitFullscreen();
-        }
+        if (document.exitFullscreen) document.exitFullscreen();
       }
     });
   </script>
