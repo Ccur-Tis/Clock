@@ -81,7 +81,6 @@
       transition: color 0.8s ease, text-shadow 0.8s ease, transform 0.3s ease;
     }
 
-    /* Green Rest State */
     .is-resting #clock {
       color: var(--emerald);
       text-shadow: 0 0 40px var(--emerald-glow);
@@ -129,7 +128,7 @@
       padding: 28px;
       border-radius: 20px;
       width: 90%;
-      max-width: 380px;
+      max-width: 400px;
       box-shadow: 0 20px 40px rgba(0,0,0,0.5);
       transform: translateY(20px);
       transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -169,21 +168,24 @@
     .form-group.active { display: flex; }
     
     .input-row { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: var(--muted); }
-    input[type="number"], input[type="time"] {
+    .input-col { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--muted); }
+    
+    input[type="number"], input[type="time"], input[type="text"] {
       background: #11151c;
       border: 1px solid var(--panel-border);
       color: var(--text);
       padding: 8px 12px;
       border-radius: 8px;
       font-size: 14px;
-      width: 100px;
       outline: none;
       font-family: inherit;
     }
-    input[type="number"]:focus, input[type="time"]:focus { border-color: var(--emerald); }
+    input[type="number"], input[type="time"] { width: 100px; }
+    input[type="text"] { width: 100%; font-size: 12px; color: #a1a1aa; }
+    input:focus { border-color: var(--emerald); }
 
     .action-btn {
-      margin-top: 20px;
+      margin-top: 10px;
       width: 100%;
       background: var(--text);
       color: var(--bg);
@@ -213,7 +215,7 @@
       border: 1px solid var(--panel-border);
       border-bottom: none;
       border-radius: 16px 16px 0 0;
-      padding: 10px 10px 10px 10px;
+      padding: 10px;
       transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
       z-index: 50;
       display: flex;
@@ -235,7 +237,6 @@
     }
     .music-drawer:hover .music-indicator { background: rgba(255, 255, 255, 0.4); }
 
-    /* Platform Switcher */
     .music-tabs {
       display: flex;
       gap: 8px;
@@ -261,19 +262,18 @@
       border-color: rgba(255,255,255,0.3);
     }
 
-    /* Iframes */
     .music-frame {
       width: 100%;
       height: 152px;
       border-radius: 10px;
       display: none;
-      background: transparent;
-      border: none;
+      background: #0a0d14;
+      border: 1px solid rgba(255,255,255,0.05);
     }
     .music-frame.active { display: block; }
-    
-    /* YouTube specific height adjustment to avoid letterboxing */
     #frame-youtube { height: 180px; }
+    
+    .hint-text { font-size: 10px; color: #6b7280; margin-top: -4px; line-height: 1.4; }
 
     @media (max-width: 600px) {
       #clock { font-size: 22vw; }
@@ -284,8 +284,10 @@
 </head>
 <body>
 
+  <!-- Settings Trigger -->
   <div class="settings-trigger" id="btnOpenSettings">⚙️</div>
 
+  <!-- Main Clock Display -->
   <div class="clock-container" id="mainContainer">
     <div class="status-badge" id="statusBadge">
       <span class="pulse-dot"></span>
@@ -294,71 +296,92 @@
     <div id="clock">00:00:00</div>
   </div>
 
-  <!-- Universal Music Bottom Drawer -->
+  <!-- Music Drawer -->
   <div class="music-drawer" id="musicDrawer">
     <div class="music-indicator"></div>
-    
-    <!-- Platform Switcher -->
     <div class="music-tabs">
       <div class="m-tab active" data-target="frame-apple" onclick="switchMusic(this)">Apple Music</div>
       <div class="m-tab" data-target="frame-spotify" onclick="switchMusic(this)">Spotify</div>
       <div class="m-tab" data-target="frame-youtube" onclick="switchMusic(this)">YouTube</div>
     </div>
-
-    <!-- Players -->
-    <iframe id="frame-apple" class="music-frame active" allow="autoplay *; encrypted-media *; fullscreen *; clipboard-write" src="https://embed.music.apple.com/us/playlist/lo-fi-hip-hop/pl.b7952a20b22a466ba727f27fbbf01479?theme=dark"></iframe>
-    <iframe id="frame-spotify" class="music-frame" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy" src="https://open.spotify.com/embed/playlist/37i9dQZF1DWWQRwui0ExPn?utm_source=generator&theme=0"></iframe>
-    <iframe id="frame-youtube" class="music-frame" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" src="https://www.youtube.com/embed/jfKfPfyJRdk?autoplay=0"></iframe>
+    <iframe id="frame-apple" class="music-frame active" allow="autoplay *; encrypted-media *; fullscreen *; clipboard-write" src=""></iframe>
+    <iframe id="frame-spotify" class="music-frame" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy" src=""></iframe>
+    <iframe id="frame-youtube" class="music-frame" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" src=""></iframe>
   </div>
 
-  <!-- Settings Panel Overlay -->
+  <!-- Settings Panel -->
   <div class="settings-overlay" id="settingsOverlay">
     <div class="settings-panel">
       <div class="panel-header">
-        <span>Rest Protocol Settings</span>
+        <span>Settings & Music</span>
         <span class="close-btn" id="btnCloseSettings">&times;</span>
       </div>
       
       <div class="tabs">
-        <div class="tab active" id="tabInterval" onclick="switchTab('interval')">Interval (多久一次)</div>
-        <div class="tab" id="tabSchedule" onclick="switchTab('schedule')">Schedule (幾點到幾點)</div>
+        <div class="tab active" id="tabInterval" onclick="switchTab('interval')">Interval</div>
+        <div class="tab" id="tabSchedule" onclick="switchTab('schedule')">Schedule</div>
+        <div class="tab" id="tabMusic" onclick="switchTab('music')">Music (自訂歌單)</div>
       </div>
 
+      <!-- Interval Mode -->
       <div class="form-group active" id="formInterval">
         <div class="input-row">
           <span>Focus Time (mins)</span>
-          <input type="number" id="inpFocus" value="50" min="1">
+          <input type="number" id="inpFocus" min="1">
         </div>
         <div class="input-row">
           <span>Rest Time (mins)</span>
-          <input type="number" id="inpRest" value="10" min="1">
+          <input type="number" id="inpRest" min="1">
         </div>
-        <button class="action-btn emerald" onclick="startInterval()">Start New Cycle Now</button>
+        <button class="action-btn emerald" onclick="startInterval()">Start New Cycle</button>
       </div>
 
+      <!-- Schedule Mode -->
       <div class="form-group" id="formSchedule">
         <div class="input-row">
           <span>Rest Start Time</span>
-          <input type="time" id="inpStart" value="12:00">
+          <input type="time" id="inpStart">
         </div>
         <div class="input-row">
           <span>Rest End Time</span>
-          <input type="time" id="inpEnd" value="13:00">
+          <input type="time" id="inpEnd">
         </div>
         <button class="action-btn" onclick="saveSchedule()">Save Schedule</button>
       </div>
+
+      <!-- Custom Music Links -->
+      <div class="form-group" id="formMusic">
+        <div class="input-col">
+          <span>Apple Music (分享連結)</span>
+          <input type="text" id="inpApple" placeholder="https://music.apple.com/...">
+        </div>
+        <div class="input-col">
+          <span>Spotify (分享連結)</span>
+          <input type="text" id="inpSpotify" placeholder="https://open.spotify.com/playlist/...">
+        </div>
+        <div class="input-col">
+          <span>YouTube (影片連結)</span>
+          <input type="text" id="inpYoutube" placeholder="https://www.youtube.com/watch?v=...">
+        </div>
+        <div class="hint-text">貼上你自己的播放清單或影片網址，系統會自動轉換為嵌入播放器。</div>
+        <button class="action-btn" onclick="saveMusicLinks()">Update Music</button>
+      </div>
+
     </div>
   </div>
 
   <script>
-    // System Config
+    // Config with Default Lofi / Deep Focus fallbacks
     let config = {
       mode: 'interval',
       focusMins: 50,
       restMins: 10,
       cycleStartTime: null, 
       scheduleStart: '12:00',
-      scheduleEnd: '13:00'
+      scheduleEnd: '13:00',
+      urlApple: 'https://music.apple.com/us/playlist/lo-fi-hip-hop/pl.b7952a20b22a466ba727f27fbbf01479',
+      urlSpotify: 'https://open.spotify.com/playlist/37i9dQZF1DWWQRwui0ExPn',
+      urlYoutube: 'https://www.youtube.com/watch?v=jfKfPfyJRdk'
     };
 
     try {
@@ -366,24 +389,51 @@
       if (saved) config = { ...config, ...JSON.parse(saved) };
     } catch (e) {}
 
-    // Init Forms
+    // Init UI
     document.getElementById('inpFocus').value = config.focusMins;
     document.getElementById('inpRest').value = config.restMins;
     document.getElementById('inpStart').value = config.scheduleStart;
     document.getElementById('inpEnd').value = config.scheduleEnd;
-    switchTab(config.mode);
+    document.getElementById('inpApple').value = config.urlApple;
+    document.getElementById('inpSpotify').value = config.urlSpotify;
+    document.getElementById('inpYoutube').value = config.urlYoutube;
 
-    function persistConfig() {
-      localStorage.setItem('zen_clock_config', JSON.stringify(config));
+    function persistConfig() { localStorage.setItem('zen_clock_config', JSON.stringify(config)); }
+
+    // Smart URL Converter for Embeds
+    function getEmbedUrl(url, platform) {
+      if (!url) return '';
+      try {
+        if (platform === 'apple' && url.includes('music.apple.com') && !url.includes('embed.music')) {
+          return url.replace('music.apple.com', 'embed.music.apple.com');
+        }
+        if (platform === 'spotify' && url.includes('open.spotify.com') && !url.includes('/embed/')) {
+          return url.replace('open.spotify.com/', 'open.spotify.com/embed/');
+        }
+        if (platform === 'youtube') {
+          let vid = '';
+          if (url.includes('youtu.be/')) vid = url.split('youtu.be/')[1].split('?')[0];
+          else if (url.includes('youtube.com/watch')) vid = new URLSearchParams(url.split('?')[1]).get('v');
+          if (vid) return `https://www.youtube.com/embed/${vid}`;
+        }
+      } catch (e) {}
+      return url; // fallback
     }
 
-    // Settings Toggle
+    function applyMusicFrames() {
+      document.getElementById('frame-apple').src = getEmbedUrl(config.urlApple, 'apple');
+      document.getElementById('frame-spotify').src = getEmbedUrl(config.urlSpotify, 'spotify');
+      document.getElementById('frame-youtube').src = getEmbedUrl(config.urlYoutube, 'youtube');
+    }
+    applyMusicFrames(); // Apply on load
+
+    // Setup Overlay
     const overlay = document.getElementById('settingsOverlay');
     document.getElementById('btnOpenSettings').onclick = () => overlay.classList.add('active');
     document.getElementById('btnCloseSettings').onclick = () => overlay.classList.remove('active');
     overlay.onclick = (e) => { if(e.target === overlay) overlay.classList.remove('active'); };
 
-    // Music Drawer Logic
+    // Drawer Click Handler
     const musicDrawer = document.getElementById('musicDrawer');
     musicDrawer.addEventListener('click', (e) => {
       if (e.target === musicDrawer || e.target.classList.contains('music-indicator')) {
@@ -391,52 +441,56 @@
       }
     });
 
-    // Music Platform Switcher
+    // Music Switcher
     function switchMusic(element) {
       document.querySelectorAll('.m-tab').forEach(t => t.classList.remove('active'));
       document.querySelectorAll('.music-frame').forEach(f => f.classList.remove('active'));
-      
       element.classList.add('active');
-      const targetId = element.getAttribute('data-target');
-      document.getElementById(targetId).classList.add('active');
+      document.getElementById(element.getAttribute('data-target')).classList.add('active');
     }
 
-    // Protocol Logic
-    function switchTab(mode) {
-      config.mode = mode;
-      document.getElementById('tabInterval').classList.toggle('active', mode === 'interval');
-      document.getElementById('tabSchedule').classList.toggle('active', mode === 'schedule');
-      document.getElementById('formInterval').classList.toggle('active', mode === 'interval');
-      document.getElementById('formSchedule').classList.toggle('active', mode === 'schedule');
-      persistConfig();
-      checkRestStatus();
+    // Settings Logic
+    function switchTab(tabId) {
+      if (tabId !== 'music') config.mode = tabId;
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.form-group').forEach(f => f.classList.remove('active'));
+      
+      const tabPrefix = tabId.charAt(0).toUpperCase() + tabId.slice(1);
+      document.getElementById('tab' + tabPrefix).classList.add('active');
+      document.getElementById('form' + tabPrefix).classList.add('active');
+      
+      if(tabId !== 'music') { persistConfig(); checkRestStatus(); }
     }
 
     function startInterval() {
       config.focusMins = parseInt(document.getElementById('inpFocus').value) || 50;
       config.restMins = parseInt(document.getElementById('inpRest').value) || 10;
       config.cycleStartTime = Date.now();
-      persistConfig();
-      overlay.classList.remove('active');
-      checkRestStatus();
+      persistConfig(); overlay.classList.remove('active'); checkRestStatus();
     }
 
     function saveSchedule() {
       config.scheduleStart = document.getElementById('inpStart').value;
       config.scheduleEnd = document.getElementById('inpEnd').value;
-      persistConfig();
-      overlay.classList.remove('active');
-      checkRestStatus();
+      persistConfig(); overlay.classList.remove('active'); checkRestStatus();
     }
 
+    function saveMusicLinks() {
+      config.urlApple = document.getElementById('inpApple').value;
+      config.urlSpotify = document.getElementById('inpSpotify').value;
+      config.urlYoutube = document.getElementById('inpYoutube').value;
+      persistConfig();
+      applyMusicFrames();
+      overlay.classList.remove('active');
+    }
+
+    // Status Engine
     function checkRestStatus() {
       const now = new Date();
       let isResting = false;
 
       if (config.mode === 'interval') {
-        if (!config.cycleStartTime) {
-          isResting = false;
-        } else {
+        if (config.cycleStartTime) {
           const elapsedMs = now.getTime() - config.cycleStartTime;
           const focusMs = config.focusMins * 60000;
           const totalCycleMs = (config.focusMins + config.restMins) * 60000;
@@ -446,14 +500,10 @@
         const currentMins = now.getHours() * 60 + now.getMinutes();
         const [sh, sm] = config.scheduleStart.split(':').map(Number);
         const [eh, em] = config.scheduleEnd.split(':').map(Number);
-        const startMins = sh * 60 + sm;
-        const endMins = eh * 60 + em;
+        const startMins = sh * 60 + sm; const endMins = eh * 60 + em;
 
-        if (startMins < endMins) {
-          isResting = currentMins >= startMins && currentMins < endMins;
-        } else {
-          isResting = currentMins >= startMins || currentMins < endMins;
-        }
+        if (startMins < endMins) isResting = currentMins >= startMins && currentMins < endMins;
+        else isResting = currentMins >= startMins || currentMins < endMins;
       }
 
       const container = document.getElementById('mainContainer');
@@ -471,7 +521,7 @@
       }
     }
 
-    // Clock Engine
+    // Clock Core
     function updateTime() {
       const now = new Date();
       const h = String(now.getHours()).padStart(2, '0');
@@ -480,18 +530,13 @@
       document.getElementById('clock').textContent = `${h}:${m}:${s}`;
       checkRestStatus();
     }
+    setInterval(updateTime, 1000); updateTime();
 
-    setInterval(updateTime, 1000);
-    updateTime();
-
-    // Fullscreen toggler
+    // Fullscreen
     document.body.addEventListener('dblclick', (e) => {
       if(e.target.closest('.settings-overlay') || e.target.closest('.settings-trigger') || e.target.closest('.music-drawer')) return;
-      if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen().catch(err => {});
-      } else {
-        if (document.exitFullscreen) document.exitFullscreen();
-      }
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(()=>{});
+      else if (document.exitFullscreen) document.exitFullscreen();
     });
   </script>
 </body>
