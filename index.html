@@ -42,7 +42,6 @@
       z-index: 10;
     }
 
-    /* Status Badge (Focus / Rest) */
     .status-badge {
       display: flex;
       align-items: center;
@@ -88,7 +87,7 @@
       text-shadow: 0 0 40px var(--emerald-glow);
     }
 
-    /* Settings Button (Hidden until hovered) */
+    /* Settings Trigger */
     .settings-trigger {
       position: absolute;
       top: 24px;
@@ -105,9 +104,7 @@
       transition: opacity 0.3s ease;
       color: var(--muted);
     }
-    body:hover .settings-trigger, .settings-trigger:active {
-      opacity: 0.6;
-    }
+    body:hover .settings-trigger, .settings-trigger:active { opacity: 0.6; }
     .settings-trigger:hover { opacity: 1; }
 
     /* Settings Panel */
@@ -125,10 +122,7 @@
       pointer-events: none;
       transition: opacity 0.3s ease;
     }
-    .settings-overlay.active {
-      opacity: 1;
-      pointer-events: auto;
-    }
+    .settings-overlay.active { opacity: 1; pointer-events: auto; }
     .settings-panel {
       background: var(--panel-bg);
       border: 1px solid var(--panel-border);
@@ -140,9 +134,7 @@
       transform: translateY(20px);
       transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     }
-    .settings-overlay.active .settings-panel {
-      transform: translateY(0);
-    }
+    .settings-overlay.active .settings-panel { transform: translateY(0); }
     .panel-header {
       font-size: 16px;
       font-weight: 800;
@@ -153,7 +145,6 @@
     }
     .close-btn { font-size: 20px; cursor: pointer; color: var(--muted); }
     
-    /* Tabs */
     .tabs {
       display: flex;
       background: rgba(0,0,0,0.5);
@@ -174,17 +165,10 @@
     }
     .tab.active { background: #232a38; color: var(--text); }
 
-    /* Forms */
     .form-group { display: none; flex-direction: column; gap: 14px; }
     .form-group.active { display: flex; }
     
-    .input-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 13px;
-      color: var(--muted);
-    }
+    .input-row { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: var(--muted); }
     input[type="number"], input[type="time"] {
       background: #11151c;
       border: 1px solid var(--panel-border);
@@ -215,24 +199,116 @@
     .action-btn.emerald { background: var(--emerald); color: #000; }
     .action-btn.emerald:hover { background: #34d399; }
 
+    /* Universal Music Drawer */
+    .music-drawer {
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%) translateY(calc(100% - 14px));
+      width: 90%;
+      max-width: 480px;
+      background: var(--panel-bg);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--panel-border);
+      border-bottom: none;
+      border-radius: 16px 16px 0 0;
+      padding: 10px 10px 10px 10px;
+      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 50;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      box-shadow: 0 -10px 30px rgba(0,0,0,0.5);
+    }
+    .music-drawer:hover, .music-drawer.active {
+      transform: translateX(-50%) translateY(0);
+    }
+    .music-indicator {
+      width: 40px;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 2px;
+      margin-bottom: 12px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .music-drawer:hover .music-indicator { background: rgba(255, 255, 255, 0.4); }
+
+    /* Platform Switcher */
+    .music-tabs {
+      display: flex;
+      gap: 8px;
+      width: 100%;
+      margin-bottom: 10px;
+    }
+    .m-tab {
+      flex: 1;
+      text-align: center;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 6px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 8px;
+      cursor: pointer;
+      color: var(--muted);
+      border: 1px solid transparent;
+      transition: 0.2s;
+    }
+    .m-tab.active {
+      background: rgba(255,255,255,0.15);
+      color: #fff;
+      border-color: rgba(255,255,255,0.3);
+    }
+
+    /* Iframes */
+    .music-frame {
+      width: 100%;
+      height: 152px;
+      border-radius: 10px;
+      display: none;
+      background: transparent;
+      border: none;
+    }
+    .music-frame.active { display: block; }
+    
+    /* YouTube specific height adjustment to avoid letterboxing */
+    #frame-youtube { height: 180px; }
+
     @media (max-width: 600px) {
       #clock { font-size: 22vw; }
-      .settings-trigger { opacity: 0.3; } /* 手機版預設微微顯示，避免找不到 */
+      .settings-trigger { opacity: 0.3; }
+      .music-drawer { width: 95%; }
     }
   </style>
 </head>
 <body>
 
-  <!-- Hidden Settings Trigger -->
   <div class="settings-trigger" id="btnOpenSettings">⚙️</div>
 
-  <!-- Main Display -->
   <div class="clock-container" id="mainContainer">
     <div class="status-badge" id="statusBadge">
       <span class="pulse-dot"></span>
       <span id="statusText">FOCUS PROTOCOL</span>
     </div>
     <div id="clock">00:00:00</div>
+  </div>
+
+  <!-- Universal Music Bottom Drawer -->
+  <div class="music-drawer" id="musicDrawer">
+    <div class="music-indicator"></div>
+    
+    <!-- Platform Switcher -->
+    <div class="music-tabs">
+      <div class="m-tab active" data-target="frame-apple" onclick="switchMusic(this)">Apple Music</div>
+      <div class="m-tab" data-target="frame-spotify" onclick="switchMusic(this)">Spotify</div>
+      <div class="m-tab" data-target="frame-youtube" onclick="switchMusic(this)">YouTube</div>
+    </div>
+
+    <!-- Players -->
+    <iframe id="frame-apple" class="music-frame active" allow="autoplay *; encrypted-media *; fullscreen *; clipboard-write" src="https://embed.music.apple.com/us/playlist/lo-fi-hip-hop/pl.b7952a20b22a466ba727f27fbbf01479?theme=dark"></iframe>
+    <iframe id="frame-spotify" class="music-frame" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy" src="https://open.spotify.com/embed/playlist/37i9dQZF1DWWQRwui0ExPn?utm_source=generator&theme=0"></iframe>
+    <iframe id="frame-youtube" class="music-frame" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" src="https://www.youtube.com/embed/jfKfPfyJRdk?autoplay=0"></iframe>
   </div>
 
   <!-- Settings Panel Overlay -->
@@ -248,7 +324,6 @@
         <div class="tab" id="tabSchedule" onclick="switchTab('schedule')">Schedule (幾點到幾點)</div>
       </div>
 
-      <!-- Interval Mode Form -->
       <div class="form-group active" id="formInterval">
         <div class="input-row">
           <span>Focus Time (mins)</span>
@@ -261,7 +336,6 @@
         <button class="action-btn emerald" onclick="startInterval()">Start New Cycle Now</button>
       </div>
 
-      <!-- Schedule Mode Form -->
       <div class="form-group" id="formSchedule">
         <div class="input-row">
           <span>Rest Start Time</span>
@@ -277,30 +351,22 @@
   </div>
 
   <script>
-    // Elements
-    const clockEl = document.getElementById('clock');
-    const mainContainer = document.getElementById('mainContainer');
-    const statusBadge = document.getElementById('statusBadge');
-    const statusText = document.getElementById('statusText');
-    const overlay = document.getElementById('settingsOverlay');
-    
-    // State
+    // System Config
     let config = {
-      mode: 'interval', // 'interval' or 'schedule'
+      mode: 'interval',
       focusMins: 50,
       restMins: 10,
-      cycleStartTime: null, // Timestamp when interval started
+      cycleStartTime: null, 
       scheduleStart: '12:00',
       scheduleEnd: '13:00'
     };
 
-    // Load from LocalStorage
     try {
       const saved = localStorage.getItem('zen_clock_config');
       if (saved) config = { ...config, ...JSON.parse(saved) };
     } catch (e) {}
 
-    // Init UI inputs
+    // Init Forms
     document.getElementById('inpFocus').value = config.focusMins;
     document.getElementById('inpRest').value = config.restMins;
     document.getElementById('inpStart').value = config.scheduleStart;
@@ -311,11 +377,31 @@
       localStorage.setItem('zen_clock_config', JSON.stringify(config));
     }
 
-    // UI Logic
+    // Settings Toggle
+    const overlay = document.getElementById('settingsOverlay');
     document.getElementById('btnOpenSettings').onclick = () => overlay.classList.add('active');
     document.getElementById('btnCloseSettings').onclick = () => overlay.classList.remove('active');
     overlay.onclick = (e) => { if(e.target === overlay) overlay.classList.remove('active'); };
 
+    // Music Drawer Logic
+    const musicDrawer = document.getElementById('musicDrawer');
+    musicDrawer.addEventListener('click', (e) => {
+      if (e.target === musicDrawer || e.target.classList.contains('music-indicator')) {
+        musicDrawer.classList.toggle('active');
+      }
+    });
+
+    // Music Platform Switcher
+    function switchMusic(element) {
+      document.querySelectorAll('.m-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.music-frame').forEach(f => f.classList.remove('active'));
+      
+      element.classList.add('active');
+      const targetId = element.getAttribute('data-target');
+      document.getElementById(targetId).classList.add('active');
+    }
+
+    // Protocol Logic
     function switchTab(mode) {
       config.mode = mode;
       document.getElementById('tabInterval').classList.toggle('active', mode === 'interval');
@@ -343,7 +429,6 @@
       checkRestStatus();
     }
 
-    // Clock & Status Logic
     function checkRestStatus() {
       const now = new Date();
       let isResting = false;
@@ -355,8 +440,7 @@
           const elapsedMs = now.getTime() - config.cycleStartTime;
           const focusMs = config.focusMins * 60000;
           const totalCycleMs = (config.focusMins + config.restMins) * 60000;
-          const currentCycleTime = elapsedMs % totalCycleMs;
-          isResting = currentCycleTime >= focusMs;
+          isResting = (elapsedMs % totalCycleMs) >= focusMs;
         }
       } else if (config.mode === 'schedule') {
         const currentMins = now.getHours() * 60 + now.getMinutes();
@@ -368,40 +452,41 @@
         if (startMins < endMins) {
           isResting = currentMins >= startMins && currentMins < endMins;
         } else {
-          // Crosses midnight (e.g., 23:00 to 06:00)
           isResting = currentMins >= startMins || currentMins < endMins;
         }
       }
 
-      // Apply Visual State
+      const container = document.getElementById('mainContainer');
+      const badge = document.getElementById('statusBadge');
+      const text = document.getElementById('statusText');
+
       if (isResting) {
-        mainContainer.classList.add('is-resting');
-        statusBadge.classList.add('resting');
-        statusText.textContent = "REST PROTOCOL";
+        container.classList.add('is-resting');
+        badge.classList.add('resting');
+        text.textContent = "REST PROTOCOL";
       } else {
-        mainContainer.classList.remove('is-resting');
-        statusBadge.classList.remove('resting');
-        statusText.textContent = "FOCUS PROTOCOL";
+        container.classList.remove('is-resting');
+        badge.classList.remove('resting');
+        text.textContent = "FOCUS PROTOCOL";
       }
     }
 
+    // Clock Engine
     function updateTime() {
       const now = new Date();
       const h = String(now.getHours()).padStart(2, '0');
       const m = String(now.getMinutes()).padStart(2, '0');
       const s = String(now.getSeconds()).padStart(2, '0');
-      clockEl.textContent = `${h}:${m}:${s}`;
+      document.getElementById('clock').textContent = `${h}:${m}:${s}`;
       checkRestStatus();
     }
 
     setInterval(updateTime, 1000);
     updateTime();
 
-    // Double-click to Fullscreen
+    // Fullscreen toggler
     document.body.addEventListener('dblclick', (e) => {
-      // Prevent fullscreen if clicking on settings panel
-      if(e.target.closest('.settings-overlay') || e.target.closest('.settings-trigger')) return;
-      
+      if(e.target.closest('.settings-overlay') || e.target.closest('.settings-trigger') || e.target.closest('.music-drawer')) return;
       if (!document.fullscreenElement) {
         document.documentElement.requestFullscreen().catch(err => {});
       } else {
