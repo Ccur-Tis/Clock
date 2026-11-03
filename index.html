@@ -46,16 +46,16 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      font-size: 11px;
+      font-size: 14px; /* 稍微放大標籤配合時鐘 */
       font-weight: 700;
-      letter-spacing: 3px;
+      letter-spacing: 4px;
       text-transform: uppercase;
       opacity: 0.6;
       transition: color 0.5s ease, opacity 0.5s ease;
     }
     .pulse-dot {
-      width: 5px;
-      height: 5px;
+      width: 6px;
+      height: 6px;
       border-radius: 50%;
       background: var(--text);
       box-shadow: 0 0 8px var(--text);
@@ -74,9 +74,10 @@
     }
 
     #clock {
-      font-size: 16vw;
+      font-size: 24vw; /* 從 16vw 放大到 24vw */
       font-weight: 800;
-      letter-spacing: -3px;
+      letter-spacing: -5px;
+      line-height: 1;
       font-variant-numeric: tabular-nums;
       transition: color 0.8s ease, text-shadow 0.8s ease, transform 0.3s ease;
     }
@@ -269,7 +270,7 @@
     .music-btn.youtube:hover { border-color: rgba(255, 0, 51, 0.5); }
 
     @media (max-width: 600px) {
-      #clock { font-size: 22vw; }
+      #clock { font-size: 32vw; /* 手機版從 22vw 放大到 32vw */ }
       .settings-trigger { opacity: 0.35; }
       .music-drawer { width: 90%; }
     }
